@@ -8,6 +8,7 @@ from app.adapters.inbound.api.schemas.donation import (
     ContributionResponse,
     DonationCreate,
     DonationResponse,
+    DonationUpdate,
     IntentCreate,
     IntentResponse,
 )
@@ -34,6 +35,20 @@ async def create_donation(
     service: DonationService = Depends(get_donation_service),
 ) -> DonationResponse:
     return DonationResponse.model_validate(await service.create(user.id, body.model_dump()))
+
+
+@router.patch("/{donation_id}", response_model=DonationResponse)
+async def update_donation(
+    donation_id: UUID,
+    body: DonationUpdate,
+    user: User = Depends(get_protector),
+    service: DonationService = Depends(get_donation_service),
+) -> DonationResponse:
+    try:
+        updated = await service.update(user.id, donation_id, body.model_dump(exclude_unset=True))
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    return DonationResponse.model_validate(updated)
 
 
 @router.post("/{donation_id}/contribute", response_model=ContributionResponse)

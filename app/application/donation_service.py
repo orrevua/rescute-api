@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from uuid import UUID
 
 from app.domain.entities.donation import DonationIntent, DonationPost
@@ -21,6 +23,15 @@ class DonationService:
         if not post.is_active:
             raise ValueError("Campaign is no longer active")
         post.current_amount += amount
+        return await self._donation_repo.save(post)
+
+    async def update(self, protector_id: UUID, donation_id: UUID, data: dict) -> DonationPost:
+        post = await self._donation_repo.find_by_id(donation_id)
+        if not post or post.protector_id != protector_id:
+            raise ValueError("Campaign not found or not owned by this protector")
+        for key, value in data.items():
+            if hasattr(post, key):
+                setattr(post, key, value)
         return await self._donation_repo.save(post)
 
     async def submit_intent(self, intent_data: dict) -> DonationIntent:

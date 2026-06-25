@@ -28,6 +28,14 @@ class DonationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class DonationUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=140)
+    description: str | None = Field(default=None, min_length=1, max_length=2000)
+    target_amount: float | None = Field(default=None, gt=0)
+    payment_link: str | None = Field(default=None, max_length=500)
+    is_active: bool | None = None
+
+
 class ContributionCreate(BaseModel):
     donor_name: str = Field(min_length=1, max_length=200)
     donor_email: str = Field(min_length=3, max_length=200)
