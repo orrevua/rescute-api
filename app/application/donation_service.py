@@ -13,3 +13,12 @@ class DonationService:
 
     async def list(self, filters: dict) -> list[DonationPost]:
         return await self._donation_repo.find_all(filters)
+
+    async def contribute(self, donation_id: UUID, amount: float) -> DonationPost:
+        post = await self._donation_repo.find_by_id(donation_id)
+        if not post:
+            raise ValueError("Campaign not found")
+        if not post.is_active:
+            raise ValueError("Campaign is no longer active")
+        post.current_amount += amount
+        return await self._donation_repo.save(post)
