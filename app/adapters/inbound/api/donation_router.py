@@ -1,12 +1,15 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+
 from app.adapters.inbound.api.middleware.auth import get_protector
 from app.adapters.inbound.api.schemas.donation import (
     ContributionCreate,
     ContributionResponse,
     DonationCreate,
     DonationResponse,
+    IntentCreate,
+    IntentResponse,
 )
 from app.application.donation_service import DonationService
 from app.dependencies import get_donation_service
@@ -49,3 +52,28 @@ async def contribute(
         amount=body.amount,
         new_total=updated.current_amount,
     )
+
+
+@router.post("/{donation_id}/intent", response_model=IntentResponse, status_code=status.HTTP_201_CREATED)
+async def submit_intent(
+    donation_id: UUID,
+    body: IntentCreate,
+    service: DonationService = Depends(get_donation_service),
+) -> IntentResponse:
+    try:
+        intent = await service.submit_intent({
+            "donation_id": donation_id,
+            **body.model_dump(),
+        })
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    return IntentResponse.model_validate(intent)
+
+
+@router.get("/intents", response_model=list[IntentResponse])
+async def list_intents(
+    user: User = Depends(get_protector),
+    service: DonationService = Depends(get_donation_service),
+) -> list[IntentResponse]:
+    intents = await service.list_intents(user.id)
+    return [IntentResponse.model_validate(i) for i in intents]

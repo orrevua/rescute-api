@@ -14,5 +14,18 @@ class DonationPost:
     id: UUID | None = None
     target_amount: float | None = None
     current_amount: float = 0.0
+    payment_link: str | None = None
     is_active: bool = True
+    created_at: datetime | None = None
+
+
+@dataclass
+class DonationIntent:
+    donation_id: UUID
+    donor_name: str
+    donor_email: str
+    donor_phone: str
+    amount: float
+    message: str | None = None
+    id: UUID | None = None
     created_at: datetime | None = None

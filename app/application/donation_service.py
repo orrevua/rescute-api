@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.domain.entities.donation import DonationPost
+from app.domain.entities.donation import DonationIntent, DonationPost
 from app.domain.ports.repositories import DonationPostRepository
 
 
@@ -22,3 +22,14 @@ class DonationService:
             raise ValueError("Campaign is no longer active")
         post.current_amount += amount
         return await self._donation_repo.save(post)
+
+    async def submit_intent(self, intent_data: dict) -> DonationIntent:
+        donation_id = intent_data["donation_id"]
+        post = await self._donation_repo.find_by_id(donation_id)
+        if not post:
+            raise ValueError("Campaign not found")
+        intent = DonationIntent(**intent_data)
+        return await self._donation_repo.save_intent(intent)
+
+    async def list_intents(self, protector_id: UUID) -> list[DonationIntent]:
+        return await self._donation_repo.find_intents_by_protector(protector_id)

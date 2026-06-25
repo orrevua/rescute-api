@@ -3,7 +3,7 @@ from uuid import UUID
 
 from app.domain.entities.adoption import AdoptionApplication
 from app.domain.entities.cat import Cat
-from app.domain.entities.donation import DonationPost
+from app.domain.entities.donation import DonationIntent, DonationPost
 from app.domain.entities.foster import FosterApplication
 from app.domain.entities.partner import Partner
 from app.domain.entities.user import FosterProfile, ProtectorProfile, User
@@ -64,6 +64,10 @@ class DonationPostRepository(ABC):
     async def find_by_id(self, id: UUID) -> DonationPost | None: ...
     @abstractmethod
     async def find_all(self, filters: dict) -> list[DonationPost]: ...
+    @abstractmethod
+    async def save_intent(self, intent: DonationIntent) -> DonationIntent: ...
+    @abstractmethod
+    async def find_intents_by_protector(self, protector_id: UUID) -> list[DonationIntent]: ...
 
 
 class PartnerRepository(ABC):

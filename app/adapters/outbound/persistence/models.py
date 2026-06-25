@@ -172,7 +172,29 @@ class DonationPostModel(Base):
     is_active: Mapped[bool] = mapped_column(default=True, server_default=sa.text("true"))
     created_at: Mapped[datetime] = mapped_column(server_default=sa.func.now())
 
+    payment_link: Mapped[str | None] = mapped_column(nullable=True)
+
     protector: Mapped["UserModel"] = relationship(back_populates="donation_posts")
+    intents: Mapped[list["DonationIntentModel"]] = relationship(back_populates="donation_post")
+
+
+class DonationIntentModel(Base):
+    __tablename__ = "donation_intents"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=sa.text("gen_random_uuid()")
+    )
+    donation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("donation_posts.id"), nullable=False
+    )
+    donor_name: Mapped[str] = mapped_column(nullable=False)
+    donor_email: Mapped[str] = mapped_column(nullable=False)
+    donor_phone: Mapped[str] = mapped_column(nullable=False)
+    amount: Mapped[float] = mapped_column(nullable=False)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=sa.func.now())
+
+    donation_post: Mapped["DonationPostModel"] = relationship(back_populates="intents")
 
 
 class PartnerModel(Base):
