@@ -18,9 +18,11 @@ class CatRepositoryImpl(CatRepository):
             model = _to_model(cat)
             self._session.add(model)
             await self._session.flush()
+            await self._session.refresh(model)
             return _to_domain(model)
         model = await self._session.merge(_to_model(cat))
         await self._session.flush()
+        await self._session.refresh(model)
         return _to_domain(model)
 
     async def find_by_id(self, id: UUID) -> Cat | None:

@@ -7,5 +7,6 @@ venv/
 *.egg
 .env
 poetry.lock
+uploads/
 .DS_Store
 Thumbs.db

@@ -8,6 +8,7 @@ from app.adapters.inbound.api.donation_router import router as donation_router
 from app.adapters.inbound.api.partner_router import router as partner_router
 from app.adapters.inbound.api.ai_care_router import router as ai_care_router
 from app.adapters.inbound.api.dashboard_router import router as dashboard_router
+from app.adapters.inbound.api.upload_router import router as upload_router
 
 router = APIRouter()
 router.include_router(auth_router)
@@ -18,3 +19,4 @@ router.include_router(partner_router)
 router.include_router(ai_care_router)
 router.include_router(cat_router)
 router.include_router(dashboard_router)
+router.include_router(upload_router)
