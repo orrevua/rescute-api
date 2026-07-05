@@ -214,3 +214,28 @@ class PartnerModel(Base):
     coupon_code: Mapped[str | None] = mapped_column(nullable=True)
     discount_pct: Mapped[int | None] = mapped_column(nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True, server_default=sa.text("true"))
+    owner_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+
+class PartnerNegotiationModel(Base):
+    __tablename__ = "partner_negotiations"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=sa.text("gen_random_uuid()")
+    )
+    partner_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("partners.id"), nullable=False
+    )
+    host_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
+    proposed_amount: Mapped[float] = mapped_column(nullable=False)
+    proposed_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    contact_email: Mapped[str] = mapped_column(nullable=False)
+    contact_phone: Mapped[str] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(
+        default="pending", server_default=sa.text("'pending'")
+    )
+    counter_amount: Mapped[float | None] = mapped_column(nullable=True)
+    counter_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=sa.func.now())

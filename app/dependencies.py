@@ -13,6 +13,7 @@ from app.adapters.outbound.persistence.partner_repository import PartnerReposito
 from app.adapters.outbound.persistence.database import get_session
 from app.adapters.outbound.persistence.user_repository import UserRepositoryImpl
 from app.application.auth_service import AuthService
+from app.application.user_service import UserService
 from app.application.adoption_service import AdoptionService
 from app.application.foster_service import FosterService
 from app.application.donation_service import DonationService
@@ -62,6 +63,12 @@ def get_auth_service(
     return AuthService(repository)
 
 
+def get_user_service(
+    repository: UserRepository = Depends(get_user_repository),
+) -> UserService:
+    return UserService(repository)
+
+
 def get_cat_service(
     repository: CatRepository = Depends(get_cat_repository),
 ) -> CatService:
@@ -86,8 +93,11 @@ def get_donation_service(
 ) -> DonationService:
     return DonationService(repository)
 
-def get_partner_service(repository: PartnerRepository = Depends(get_partner_repository)) -> PartnerService:
-    return PartnerService(repository)
+def get_partner_service(
+    repository: PartnerRepository = Depends(get_partner_repository),
+    user_repository: UserRepository = Depends(get_user_repository),
+) -> PartnerService:
+    return PartnerService(repository, user_repository)
 
 def get_ai_care_service() -> AICareService:
     return AICareService(OpenAICompatibleProvider())

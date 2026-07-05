@@ -35,3 +35,24 @@ class FosterProfile:
     city: str
     state: str
     id: UUID | None = None
+
+
+@dataclass
+class Host:
+    user_id: UUID
+    role: UserRole
+    display_name: str
+    city: str | None = None
+    state: str | None = None
+
+
+@dataclass
+class UserProfile:
+    email: str
+    role: UserRole
+    org_name: str | None = None
+    full_name: str | None = None
+    description: str | None = None
+    phone: str | None = None
+    city: str | None = None
+    state: str | None = None

@@ -9,7 +9,7 @@ from app.adapters.outbound.persistence.models import (
     ProtectorProfileModel,
     UserModel,
 )
-from app.domain.entities.user import FosterProfile, ProtectorProfile, User
+from app.domain.entities.user import FosterProfile, Host, ProtectorProfile, User
 from app.domain.ports.repositories import UserRepository
 from app.domain.value_objects import UserRole
 
@@ -74,6 +74,70 @@ class UserRepositoryImpl(UserRepository):
             id=model.id, user_id=model.user_id, full_name=model.full_name,
             phone=model.phone, city=model.city, state=model.state,
         )
+
+    async def find_protector_profile(self, user_id: UUID) -> ProtectorProfile | None:
+        stmt = select(ProtectorProfileModel).where(ProtectorProfileModel.user_id == user_id)
+        model = (await self._session.execute(stmt)).scalars().first()
+        if not model:
+            return None
+        return ProtectorProfile(
+            id=model.id, user_id=model.user_id, org_name=model.org_name,
+            description=model.description, phone=model.phone, city=model.city, state=model.state,
+        )
+
+    async def find_foster_profile(self, user_id: UUID) -> FosterProfile | None:
+        stmt = select(FosterProfileModel).where(FosterProfileModel.user_id == user_id)
+        model = (await self._session.execute(stmt)).scalars().first()
+        if not model:
+            return None
+        return FosterProfile(
+            id=model.id, user_id=model.user_id, full_name=model.full_name,
+            phone=model.phone, city=model.city, state=model.state,
+        )
+
+    async def update_protector_profile(self, profile: ProtectorProfile) -> ProtectorProfile:
+        stmt = select(ProtectorProfileModel).where(ProtectorProfileModel.user_id == profile.user_id)
+        model = (await self._session.execute(stmt)).scalars().first()
+        if not model:
+            raise ValueError("Protector profile not found")
+        model.org_name = profile.org_name
+        model.description = profile.description
+        model.phone = profile.phone
+        model.city = profile.city
+        model.state = profile.state
+        await self._session.flush()
+        return ProtectorProfile(
+            id=model.id, user_id=model.user_id, org_name=model.org_name,
+            description=model.description, phone=model.phone, city=model.city, state=model.state,
+        )
+
+    async def update_foster_profile(self, profile: FosterProfile) -> FosterProfile:
+        stmt = select(FosterProfileModel).where(FosterProfileModel.user_id == profile.user_id)
+        model = (await self._session.execute(stmt)).scalars().first()
+        if not model:
+            raise ValueError("Foster profile not found")
+        model.full_name = profile.full_name
+        model.phone = profile.phone
+        model.city = profile.city
+        model.state = profile.state
+        await self._session.flush()
+        return FosterProfile(
+            id=model.id, user_id=model.user_id, full_name=model.full_name,
+            phone=model.phone, city=model.city, state=model.state,
+        )
+
+    async def find_hosts(self) -> list[Host]:
+        protectors = (await self._session.execute(select(ProtectorProfileModel))).scalars().all()
+        fosters = (await self._session.execute(select(FosterProfileModel))).scalars().all()
+        hosts = [
+            Host(user_id=p.user_id, role=UserRole.protector, display_name=p.org_name, city=p.city, state=p.state)
+            for p in protectors
+        ]
+        hosts += [
+            Host(user_id=f.user_id, role=UserRole.foster, display_name=f.full_name, city=f.city, state=f.state)
+            for f in fosters
+        ]
+        return hosts
 
 
 def _to_domain(model: UserModel) -> User:

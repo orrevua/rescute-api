@@ -24,6 +24,13 @@ class Sex(str, Enum):
     female = "female"
 
 
+class NegotiationStatus(str, Enum):
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+    countered = "countered"
+
+
 @dataclass(frozen=True)
 class Location:
     city: str
