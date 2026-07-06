@@ -17,5 +17,7 @@ services:
         value: gpt-4o-mini
       - key: AI_BASE_URL
         value: https://api.openai.com/v1
+      - key: ENVIRONMENT
+        value: production
       - key: PYTHON_VERSION
         value: "3.12"
