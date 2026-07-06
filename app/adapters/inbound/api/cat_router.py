@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -8,6 +9,8 @@ from app.application.cat_service import CatService
 from app.dependencies import get_cat_service
 from app.domain.entities.user import User
 from app.domain.value_objects import Sex
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/cats", tags=["cats"])
 
@@ -46,7 +49,8 @@ async def get_cat(cat_id: UUID, service: CatService = Depends(get_cat_service)) 
     try:
         return _response(await service.get_cat(cat_id))
     except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        log.warning("Cat lookup failed for %s: %s", cat_id, error)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cat not found") from error
 
 
 @router.post("", response_model=CatResponse, status_code=status.HTTP_201_CREATED)

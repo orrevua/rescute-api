@@ -57,10 +57,10 @@ class OpenAICompatibleProvider(AIProvider):
         except urllib.error.HTTPError as e:
             detail = e.read().decode("utf-8", "replace")[:500]
             log.error("AI API HTTP error %d: %s", e.code, detail)
-            raise RuntimeError(f"AI API error {e.code}: {detail}") from e
+            raise RuntimeError("AI service unavailable") from e
         except urllib.error.URLError as e:
             log.error("AI API connection error: %s", e.reason)
-            raise RuntimeError(f"Failed to contact AI service: {e.reason}") from e
+            raise RuntimeError("AI service unavailable") from e
         return data
 
     async def reply(self, system_prompt: str, messages: Sequence[ChatMessage]) -> str:

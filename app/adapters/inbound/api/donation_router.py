@@ -1,6 +1,7 @@
+import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from app.adapters.inbound.api.middleware.auth import get_protector
 from app.adapters.inbound.api.schemas.donation import (
@@ -16,6 +17,9 @@ from app.application.donation_service import DonationService
 from app.dependencies import get_donation_service
 from app.domain.entities.user import User
 from app.domain.value_objects import DonationType
+from app.rate_limit import limiter
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/donations", tags=["donations"])
 
@@ -47,12 +51,15 @@ async def update_donation(
     try:
         updated = await service.update(user.id, donation_id, body.model_dump(exclude_unset=True))
     except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        log.warning("Donation update failed for %s: %s", donation_id, error)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Campaign not found") from error
     return DonationResponse.model_validate(updated)
 
 
 @router.post("/{donation_id}/contribute", response_model=ContributionResponse)
+@limiter.limit("10/minute")
 async def contribute(
+    request: Request,
     donation_id: UUID,
     body: ContributionCreate,
     service: DonationService = Depends(get_donation_service),
@@ -60,6 +67,7 @@ async def contribute(
     try:
         updated = await service.contribute(donation_id, body.amount)
     except ValueError as error:
+        log.warning("Contribution rejected for %s: %s", donation_id, error)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
     return ContributionResponse(
         donation_id=donation_id,
@@ -70,7 +78,9 @@ async def contribute(
 
 
 @router.post("/{donation_id}/intent", response_model=IntentResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def submit_intent(
+    request: Request,
     donation_id: UUID,
     body: IntentCreate,
     service: DonationService = Depends(get_donation_service),
@@ -81,7 +91,8 @@ async def submit_intent(
             **body.model_dump(),
         })
     except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+        log.warning("Donation intent rejected for %s: %s", donation_id, error)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Campaign not found") from error
     return IntentResponse.model_validate(intent)
 
 

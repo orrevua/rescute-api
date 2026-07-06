@@ -17,6 +17,8 @@ class DonationService:
         return await self._donation_repo.find_all(filters)
 
     async def contribute(self, donation_id: UUID, amount: float) -> DonationPost:
+        if amount <= 0:
+            raise ValueError("Contribution amount must be positive")
         post = await self._donation_repo.find_by_id(donation_id)
         if not post:
             raise ValueError("Campaign not found")
