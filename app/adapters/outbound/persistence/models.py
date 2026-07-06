@@ -18,6 +18,9 @@ class UserModel(Base):
     hashed_password: Mapped[str] = mapped_column(nullable=False)
     role: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(default=True, server_default=sa.text("true"))
+    token_version: Mapped[int] = mapped_column(
+        default=0, server_default=sa.text("0"), nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(server_default=sa.func.now())
     updated_at: Mapped[datetime | None] = mapped_column(
         onupdate=sa.func.now(), server_default=sa.func.now()

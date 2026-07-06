@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -43,6 +43,15 @@ class UserRepositoryImpl(UserRepository):
         )
         model = (await self._session.execute(stmt)).scalars().first()
         return _to_domain(model) if model else None
+
+    async def increment_token_version(self, user_id: UUID) -> None:
+        stmt = (
+            update(UserModel)
+            .where(UserModel.id == user_id)
+            .values(token_version=UserModel.token_version + 1)
+        )
+        await self._session.execute(stmt)
+        await self._session.flush()
 
     async def save_protector_profile(self, profile: ProtectorProfile) -> ProtectorProfile:
         model = ProtectorProfileModel(
@@ -147,6 +156,7 @@ def _to_domain(model: UserModel) -> User:
         hashed_password=model.hashed_password,
         role=UserRole(model.role),
         is_active=model.is_active,
+        token_version=model.token_version,
         created_at=model.created_at,
         updated_at=model.updated_at,
     )
@@ -159,6 +169,7 @@ def _to_model(user: User) -> UserModel:
         hashed_password=user.hashed_password,
         role=user.role.value,
         is_active=user.is_active,
+        token_version=user.token_version,
         created_at=user.created_at,
         updated_at=user.updated_at,
     )
