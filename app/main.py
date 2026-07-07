@@ -1,4 +1,9 @@
+import logging
 import os
+import subprocess
+import sys
+from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,8 +36,45 @@ def _cors_origins() -> list[str]:
     return origins
 
 
+log = logging.getLogger(__name__)
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _run_migrations() -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        log.info("Database migrations applied")
+    else:
+        log.error("Migration failed: %s", result.stderr)
+
+
+async def _seed_demo_data() -> None:
+    from scripts.seed import seed
+
+    try:
+        await seed()
+        log.info("Demo seed ensured")
+    except Exception as error:  # noqa: BLE001 — seed failure must not block startup
+        log.error("Demo seed failed: %s", error)
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    if os.getenv("RUN_MIGRATIONS_ON_STARTUP", "1") == "1":
+        _run_migrations()
+    if os.getenv("SEED_DEMO_DATA", "1") == "1":
+        await _seed_demo_data()
+    yield
+
+
 def create_app() -> FastAPI:
-    app = FastAPI(title="Rescute API", version="0.1.0")
+    app = FastAPI(title="Rescute API", version="0.1.0", lifespan=_lifespan)
 
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
