@@ -22,6 +22,18 @@ _SECURITY_HEADERS = {
     "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
 }
 
+# Swagger UI / ReDoc load their assets from jsdelivr and boot via an inline
+# script, so the API-wide 'none' policy would blank these pages out.
+_DOCS_CSP = (
+    "default-src 'none'; "
+    "script-src 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "img-src data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+    "connect-src 'self'; "
+    "frame-ancestors 'none'"
+)
+_DOCS_PATHS = {"/docs", "/redoc"}
+
 
 def _is_production() -> bool:
     return os.getenv("ENVIRONMENT", "").lower() == "production"
@@ -92,6 +104,8 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         for header, value in _SECURITY_HEADERS.items():
             response.headers.setdefault(header, value)
+        if request.url.path in _DOCS_PATHS:
+            response.headers["Content-Security-Policy"] = _DOCS_CSP
         if request.url.path.startswith("/uploads/"):
             response.headers["Content-Disposition"] = "attachment"
         return response
