@@ -78,10 +78,10 @@ See [.env.example](.env.example). Summary:
 
 ## Test credentials (seeded)
 
-`python -m scripts.seed` creates a protector account with one cat, one partner clinic, and one donation post:
+`python -m scripts.seed` (also run automatically at startup when `SEED_DEMO_DATA=1`) creates demo data covering the main test cases — seven cats (kitten, senior, FIV+, FeLV+, shy/semi-feral, different states), three partners, and three donation posts (funded, unfunded, supplies-type) — plus two accounts, both with password `Rescute123!`:
 
-- **Email:** `protetor@rescute.app`
-- **Password:** `Rescute123!`
+- **Protector:** `protetor@rescute.app` (manages cats, donations, applications)
+- **Foster:** `foster@rescute.app` (regular user with a foster profile)
 
 ## Deployment
 
