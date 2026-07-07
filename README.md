@@ -8,8 +8,6 @@ Backend for **Rescute** — a cat adoption and donation platform that connects i
 - **Stack:** Python 3.12 · FastAPI · SQLAlchemy 2 (async) · PostgreSQL · Alembic · JWT auth · OpenAI-compatible AI provider
 - **Architecture:** Hexagonal (ports & adapters) — `app/domain` (entities/ports) → `app/application` (services) → `app/adapters` (inbound API routers, outbound persistence/AI)
 
-> All UI text in the product is Brazilian Portuguese (pt-BR); all code and documentation are in English.
-
 ## Features (API surface)
 
 | Area | Endpoints | Auth |
