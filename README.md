@@ -42,10 +42,8 @@ python -m venv venv
 # Windows: venv\Scripts\activate    |    macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Database (Docker, from repo root)
-docker run -d --name rescute-db -p 5432:5432 \
-  -e POSTGRES_DB=rescute -e POSTGRES_USER=rescute -e POSTGRES_PASSWORD=rescute \
-  postgres:16-alpine
+# 3. Database (Docker)
+docker compose up -d
 
 # 4. Environment
 cp .env.example .env
