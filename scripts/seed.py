@@ -9,7 +9,7 @@ does not already exist.
 import asyncio
 
 from passlib.context import CryptContext
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.adapters.outbound.persistence.database import Base, async_session, engine
 from app.adapters.outbound.persistence.models import (
@@ -131,11 +131,11 @@ def _donation_posts(protector_id) -> list[DonationPostModel]:
             description="FIV+ cats need annual exams to stay healthy.",
             type="financial", target_amount=350, current_amount=0,
         ),
-        # Supplies type, no monetary target — tests non-financial posts
+        # Item type, no monetary target — tests non-financial posts
         DonationPostModel(
             protector_id=protector_id, title="Blankets and carriers",
             description="Used blankets, towels, and transport carriers welcome.",
-            type="supplies", target_amount=None, current_amount=0,
+            type="item", target_amount=None, current_amount=0,
         ),
     ]
 
@@ -194,6 +194,14 @@ async def seed() -> None:
 
         existing_partners = set((await session.scalars(select(PartnerModel.name))).all())
         session.add_all(p for p in _partners() if p.name not in existing_partners)
+
+        # Repair rows a previous seed created with a type outside the
+        # DonationType enum ("supplies"), which crashed donation listings.
+        await session.execute(
+            update(DonationPostModel)
+            .where(DonationPostModel.type.notin_(["financial", "item"]))
+            .values(type="item")
+        )
 
         existing_posts = set(
             (await session.scalars(select(DonationPostModel.title).where(DonationPostModel.protector_id == protector.id))).all()
