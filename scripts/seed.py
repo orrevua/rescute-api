@@ -17,6 +17,7 @@ from app.adapters.outbound.persistence.models import (
     DonationPostModel,
     FosterProfileModel,
     PartnerModel,
+    PartnerNegotiationModel,
     ProtectorProfileModel,
     UserModel,
 )
@@ -194,6 +195,38 @@ async def seed() -> None:
 
         existing_partners = set((await session.scalars(select(PartnerModel.name))).all())
         session.add_all(p for p in _partners() if p.name not in existing_partners)
+        await session.flush()
+
+        # Mark the seed partners as already accepted by the protector: owned,
+        # active, and with an accepted negotiation record. Also repairs
+        # previously seeded partners that were created without an owner.
+        seed_partner_names = [p.name for p in _partners()]
+        partners = (
+            await session.scalars(
+                select(PartnerModel).where(PartnerModel.name.in_(seed_partner_names))
+            )
+        ).all()
+        for partner in partners:
+            partner.owner_id = protector.id
+            partner.is_active = True
+            negotiation = await session.scalar(
+                select(PartnerNegotiationModel).where(
+                    PartnerNegotiationModel.partner_id == partner.id,
+                    PartnerNegotiationModel.host_id == protector.id,
+                )
+            )
+            if not negotiation:
+                session.add(
+                    PartnerNegotiationModel(
+                        partner_id=partner.id,
+                        host_id=protector.id,
+                        proposed_amount=150.0,
+                        proposed_message=f"Partnership proposal from {partner.name}.",
+                        contact_email="contact@" + partner.name.lower().replace(" ", "") + ".com",
+                        contact_phone="+55 11 98888-0000",
+                        status="accepted",
+                    )
+                )
 
         # Repair rows a previous seed created with a type outside the
         # DonationType enum ("supplies"), which crashed donation listings.
