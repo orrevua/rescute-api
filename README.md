@@ -2,6 +2,8 @@
 
 Backend for **Rescute** — a cat adoption and donation platform that connects independent cat protectors (NGOs, shelters, rescuers) with adopters, foster homes, and donors. Includes an AI-powered cat-care Q&A assistant.
 
+- **Live API (Swagger docs):** https://rescute-api.onrender.com/docs (free Render tier — may cold-start for ~1 minute)
+- **Live app:** https://rescute.vercel.app
 - **Frontend repository:** [orrevua/rescute](https://github.com/orrevua/rescute) (Next.js)
 - **Stack:** Python 3.12 · FastAPI · SQLAlchemy 2 (async) · PostgreSQL · Alembic · JWT auth · OpenAI-compatible AI provider
 - **Architecture:** Hexagonal (ports & adapters) — `app/domain` (entities/ports) → `app/application` (services) → `app/adapters` (inbound API routers, outbound persistence/AI)
